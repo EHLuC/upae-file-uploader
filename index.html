@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upaê | Compartilhamento Rápido de Arquivos</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+    
+    <meta property="og:title" content="Upaê | Compartilhamento Rápido de Arquivos">
+    <meta property="og:description" content="Compartilhe qualquer arquivo de forma simples e instantânea com um link curto e QR Code.">
+    <meta property="og:image" content="https://upae.com.br/social-preview.png">
+    <meta property="og:url" content="https://upae.com.br">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    
+    <link rel="stylesheet" href="/style.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2M86J6WW9T"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-2M86J6WW9T');
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Upload Rápido de Arquivos</h1>
+        <p class="subtitle">Compartilhe qualquer arquivo de forma simples e instantânea.</p>
+        <div class="upload-area" id="dropArea">
+            <div class="upload-icon">📁</div>
+            <p>Arraste e solte seu arquivo aqui ou clique para selecionar</p>
+        </div>
+        <input type="file" id="fileInput" class="file-input">
+        <p id="size-limit-text">*Limite de 10 MB por arquivo.</p>
+        <div class="loader" id="loader"></div>
+        <div class="status" id="status"></div>
+        <div class="preview-section" id="previewSection">
+            <h2>Pré-visualização</h2>
+            <img id="preview"/>
+            <div id="filePreview">
+                <span>📄</span>
+                <p id="fileName"></p>
+            </div>
+        </div>
+        <div class="qr-section" id="qrSection">
+            <h2>QR Code</h2>
+            <canvas id="qr"></canvas>
+        </div>
+        <div class="result-section" id="resultSection">
+            <h2>Seu link curto:</h2>
+            <p id="link"></p>
+            <button id="copyButton">Copiar Link</button>
+        </div>
+    </div>
+
+    <footer id="dynamic-footer"></footer>
+
+    <script src="/script.js" defer></script>
+</body>
+</html>
