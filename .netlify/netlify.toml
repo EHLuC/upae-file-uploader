@@ -1,0 +1,51 @@
+functionsDirectory = "C:\\Users\\User\\Documents\\Site Ctrl+V\\decima quinta tentativa\\netlify\\functions"
+functionsDirectoryOrigin = "config-v1"
+headersOrigin = "config"
+redirectsOrigin = "config"
+plugins = []
+
+[build]
+publish = "C:\\Users\\User\\Documents\\Site Ctrl+V\\decima quinta tentativa"
+publishOrigin = "default"
+functions = "C:\\Users\\User\\Documents\\Site Ctrl+V\\decima quinta tentativa\\netlify\\functions"
+
+[build.environment]
+
+[build.processing]
+
+[build.processing.css]
+
+[build.processing.html]
+
+[build.processing.images]
+
+[build.processing.js]
+
+[build.services]
+
+[functions]
+
+[functions."*"]
+
+[[headers]]
+for = "/*"
+
+[headers.values]
+Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+X-Frame-Options = "DENY"
+X-Content-Type-Options = "nosniff"
+Referrer-Policy = "no-referrer"
+Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+Content-Security-Policy = "default-src 'self'; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://res.cloudinary.com data: blob:; connect-src 'self' https://api.cloudinary.com https://www.google-analytics.com;"
+
+[[redirects]]
+from = "/s/:slug"
+to = "/.netlify/functions/redirect?slug=:slug"
+status = 200.0
+force = false
+
+[redirects.query]
+
+[redirects.conditions]
+
+[redirects.headers]

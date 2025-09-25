@@ -1,0 +1,164 @@
+/* --- Configurações Globais e Tema --- */
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+}
+
+body { 
+    font-family: 'Poppins', sans-serif; 
+    background-color: #292D3E; 
+    color: #A6ACCD; 
+    min-height: 100vh; 
+    padding: 30px; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+}
+
+/* --- Estrutura Principal --- */
+.container { 
+    max-width: 800px; 
+    width: 100%; 
+    background: #202334; 
+    border-radius: 20px; 
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); 
+    padding: 40px; 
+    margin-top: 20px; 
+    text-align: center; 
+    border: 1px solid #44475A;
+}
+
+h1 { color: #C792EA; }
+h2 { color: #89DDFF; margin-bottom: 15px; }
+.subtitle { color: #676E95; margin-bottom: 30px; }
+
+/* --- Área de Upload --- */
+.upload-area { 
+    border: 3px dashed #82AAFF; 
+    border-radius: 15px; 
+    padding: 40px 20px; 
+    margin: 20px 0; 
+    background: #292D3E; 
+    cursor: pointer; 
+    transition: all 0.3s ease; 
+}
+
+.upload-area:hover { 
+    background: #30354a; 
+}
+
+.upload-icon { 
+    font-size: 4rem; 
+    color: #82AAFF; 
+    margin-bottom: 15px; 
+}
+
+/* Oculta o botão de upload padrão do navegador */
+.file-input { 
+    display: none; 
+}
+
+#size-limit-text {
+    font-size: 0.8rem;
+    color: #676E95;
+    margin-top: -10px;
+    margin-bottom: 10px;
+}
+
+
+/* --- Seções de Resultado (Preview, QR, Link) --- */
+.preview-section, .result-section, .qr-section { 
+    display: none; 
+    margin-top: 30px; 
+    background: #292D3E;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #44475A;
+}
+
+.preview-section { 
+    flex-direction: column; 
+    align-items: center; 
+}
+
+.preview-section img { 
+    margin: 10px auto 0;
+    max-width: 100%; 
+    max-height: 300px; 
+    border-radius: 10px; 
+}
+
+#filePreview {
+    padding: 20px;
+    border: 1px solid #44475A;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+#filePreview span {
+    font-size: 3rem;
+}
+
+#fileName {
+    margin-top: 10px;
+    color: #A6ACCD;
+}
+
+#qr { 
+    background-color: white; 
+    padding: 10px; 
+    border-radius: 10px; 
+}
+
+#link a { 
+    color: #89DDFF; 
+    text-decoration: none; 
+    word-break: break-all;
+    font-weight: 600; 
+}
+
+#copyButton {
+    padding: 10px 20px;
+    margin-top: 15px;
+    cursor: pointer;
+    background-color: #82AAFF;
+    color: #292D3E;
+    border: none;
+    border-radius: 50px;
+    font-weight: 600;
+    transition: background-color 0.3s;
+}
+
+
+/* --- Componentes da UI (Loader, Status) --- */
+.loader { 
+    border: 4px solid #44475A; 
+    border-top: 4px solid #C792EA; 
+    border-radius: 50%; 
+    width: 40px; 
+    height: 40px; 
+    animation: spin 1s linear infinite; 
+    margin: 20px auto; 
+    display: none; 
+}
+
+@keyframes spin { 
+    0% { transform: rotate(0deg); } 
+    100% { transform: rotate(360deg); } 
+}
+
+.status { 
+    font-weight: 500; 
+    margin: 15px 0; 
+}
+
+/* --- Rodapé --- */
+footer { 
+    margin-top: 40px; 
+    padding: 20px; 
+    color: #676E95; 
+    font-size: 0.9rem; 
+    text-align: center; 
+    width: 100%; 
+}

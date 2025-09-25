@@ -1,0 +1,26 @@
+[build]
+  functions = "netlify/functions"
+[[redirects]]
+  from = "/s/:slug"
+  to = "/.netlify/functions/redirect?slug=:slug"
+  status = 200  
+[[headers]]
+  # Aplica estas regras de segurança a todas as páginas do site
+  for = "/*"
+  [headers.values]
+    # Força o navegador a sempre usar HTTPS por um ano
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+
+    # Impede que o site seja embutido em iframes em outros sites (previne clickjacking)
+    X-Frame-Options = "DENY"
+
+    # Impede o navegador de tentar "adivinhar" o tipo de um arquivo, o que pode ser perigoso
+    X-Content-Type-Options = "nosniff"
+
+    # Controla quais informações de referência são enviadas a outros sites
+    Referrer-Policy = "no-referrer"
+
+    # Desativa funcionalidades do navegador que não usamos (câmera, microfone, etc.)
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    # Nova linha Adicionando o Content-Security-Policy (CSP)
+    Content-Security-Policy = "default-src 'self'; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://res.cloudinary.com data: blob:; connect-src 'self' https://api.cloudinary.com https://www.google-analytics.com;"
