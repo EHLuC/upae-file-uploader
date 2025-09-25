@@ -7,7 +7,7 @@
 **Acesse o site ao vivo:** **[upae.com.br](https://upae.com.br/)**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Netlify Status](https://api.netlify.com/api/v1/badges/SEU_BADGE_ID_AQUI/deploy-status)](https://app.netlify.com/sites/ehluc/deploys)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/95a7eac0-b9ce-47f7-9216-5a2441e30301/deploy-status)](https://app.netlify.com/projects/ehluc/deploys)](https://app.netlify.com/sites/ehluc/deploys)
 
 ---
 
