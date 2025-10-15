@@ -23,4 +23,4 @@
     # Desativa funcionalidades do navegador que não usamos (câmera, microfone, etc.)
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
     # Nova linha Adicionando o Content-Security-Policy (CSP)
-    Content-Security-Policy = "default-src 'self'; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://res.cloudinary.com data: blob:; connect-src 'self' https://api.cloudinary.com https://www.google-analytics.com;"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'sha256-qC0nnhrLLMyxGgY/RYhAFS/ex/s+jbiLPlnoaTvcWyk=' https://www.googletagmanager.com https://www.google-analytics.com https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://res.cloudinary.com data: blob:; connect-src 'self' https://api.cloudinary.com https://www.google-analytics.com;"
