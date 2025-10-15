@@ -7,7 +7,7 @@ const fileInput = document.getElementById("fileInput"),
       fileNameDisplay = document.getElementById("fileName"), 
       qrCanvas = document.getElementById("qr"), 
       linkDisplay = document.getElementById("link"), 
-      statusDisplay = document.getElementById("status"), 
+      statusDisplay = document.getElementById("status"), // Corrigido: O statusDisplay está de volta
       loader = document.getElementById("loader"), 
       previewSection = document.getElementById("previewSection"), 
       qrSection = document.getElementById("qrSection"), 
@@ -79,7 +79,6 @@ async function uploadFile(file) {
         const shortUrl = `${window.location.origin}/s/${slug}`;
         
         // --- INTEGRAÇÃO POSTHOG: SUCESSO ---
-        // Disparo um evento para o PostHog para registrar que o upload foi um sucesso.
         if (window.posthog) {
             posthog.capture('upload_success', {
                 file_name: file.name,
@@ -111,7 +110,6 @@ async function uploadFile(file) {
 
     } catch (err) {
         // --- INTEGRAÇÃO POSTHOG: FALHA ---
-        // Se algo der errado, eu disparo um evento de falha para o PostHog.
         if (window.posthog) {
             posthog.capture('upload_failed', {
                 file_name: file ? file.name : 'unknown',
@@ -131,43 +129,28 @@ async function uploadFile(file) {
 }
 
 // --- Lógica de Manipulação de Arquivos e Eventos ---
-
-// Eu defini o limite de tamanho de arquivo baseado no plano gratuito do Cloudinary.
 const MAX_SIZE_MB = 10;
 const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
-/**
- * Minha função "porteiro" que verifica o tamanho do arquivo antes de iniciar o upload.
- * @param {File} file - O arquivo a ser verificado.
- */
 const handleFile = (file) => {
     if (!file) return;
-
-    // Eu verifico se o tamanho do arquivo excede o limite.
     if (file.size > MAX_SIZE_BYTES) {
         statusDisplay.style.color = '#f87171';
         statusDisplay.textContent = `Erro: O arquivo é muito grande. O limite é de ${MAX_SIZE_MB} MB.`;
         statusDisplay.style.display = 'block';
-        return; // Eu paro a execução aqui.
+        return;
     }
-    
-    // Se o tamanho estiver OK, eu prossigo com o upload.
     uploadFile(file);
 };
 
-// Evento: quando um arquivo é selecionado pelo botão.
+// Listeners de evento
 fileInput.addEventListener("change", () => { if (fileInput.files.length > 0) handleFile(fileInput.files[0]); });
-
-// Evento: quando a área de upload é clicada, ativa o botão escondido.
 dropArea.addEventListener('click', () => fileInput.click());
-
-// Eventos para o efeito visual de arrastar e soltar (drag and drop).
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => dropArea.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }));
 ['dragenter', 'dragover'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.style.borderColor = '#4ade80'));
 ['dragleave', 'drop'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.style.borderColor = '#82AAFF'));
 dropArea.addEventListener("drop", (e) => { if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]); });
 
-// Evento: quando uma imagem é colada na página (Ctrl+V).
 document.body.addEventListener('paste', (e) => {
     const items = (e.clipboardData || window.clipboardData).items;
     for (const item of items) {
@@ -180,22 +163,15 @@ document.body.addEventListener('paste', (e) => {
     }
 });
 
-// Lógica para o botão de "Copiar Link".
 const copyButton = document.getElementById('copyButton');
 if (copyButton) {
     copyButton.addEventListener('click', () => {
         const linkElement = document.getElementById('link').querySelector('a');
         if (linkElement && navigator.clipboard) {
             navigator.clipboard.writeText(linkElement.href).then(() => {
-                
-                // --- INTEGRAÇÃO POSTHOG: LINK COPIADO ---
-                // Eu registro o evento de que o usuário copiou o link.
                 if (window.posthog) {
-                    posthog.capture('link_copied', {
-                        url_copied: linkElement.href
-                    });
+                    posthog.capture('link_copied', { url_copied: linkElement.href });
                 }
-                
                 copyButton.textContent = 'Copiado!';
                 copyButton.style.backgroundColor = '#4ade80';
                 setTimeout(() => {
@@ -207,14 +183,12 @@ if (copyButton) {
     });
 }
 
-// Lógica para o rodapé com as frases aleatórias que eu escolhi.
+// Lógica para o rodapé
 document.addEventListener('DOMContentLoaded', () => {
-    const frasesPessoais = [ "Feito com ❤️ por Lucas Cassiano.", "A 15ª tentativa é a que vale!", "Com ❤️, código e alguns loops por Lucas Cassiano."];
-    const frasesDeTech = [ "Trocando bits por sorrisos.", "Hospedado na nuvem, com os pés no chão.", "Cuidado: este site pode conter traços de código.", "Transformando café em código desde 2025.", "404: Sono não encontrado.", "Versão estável (por enquanto).", "Não é mágica, é tecnologia (mas às vezes parece)." ];
-    const frasesUpae = [ "Dando um 'upa' nos seus arquivos.", "Upaê! Seu link chegou na velocidade de um clique.", "Salvando arquivos do limbo do seu desktop.", "Conectando meu PC e meu celular, um QR code de cada vez.", "Simples. Rápido. Compartilhado." ];
-    
-    // Eu decidi adicionar as frases pessoais duas vezes para que elas tenham mais chance de aparecer!
-    const frasesDivertidas = [ ...frasesPessoais, ...frasesDeTech, ...frasesUpae, ...frasesPessoais ];
+    const frasesPessoais = ["Feito com ❤️ por Lucas Cassiano.", "A 15ª tentativa é a que vale!", "Com ❤️, código e alguns loops por Lucas Cassiano."];
+    const frasesDeTech = ["Trocando bits por sorrisos.", "Hospedado na nuvem, com os pés no chão.", "Cuidado: este site pode conter traços de código.", "Transformando café em código desde 2025.", "404: Sono não encontrado.", "Versão estável (por enquanto).", "Não é mágica, é tecnologia (mas às vezes parece)."];
+    const frasesUpae = ["Dando um 'upa' nos seus arquivos.", "Upaê! Seu link chegou na velocidade de um clique.", "Salvando arquivos do limbo do seu desktop.", "Conectando meu PC e meu celular, um QR code de cada vez.", "Simples. Rápido. Compartilhado."];
+    const frasesDivertidas = [...frasesPessoais, ...frasesDeTech, ...frasesUpae, ...frasesPessoais];
     const footerElement = document.getElementById('dynamic-footer');
     if (footerElement) {
         const indiceAleatorio = Math.floor(Math.random() * frasesDivertidas.length);
