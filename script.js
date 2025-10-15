@@ -7,23 +7,19 @@ const fileInput = document.getElementById("fileInput"),
       fileNameDisplay = document.getElementById("fileName"), 
       qrCanvas = document.getElementById("qr"), 
       linkDisplay = document.getElementById("link"), 
-      statusDisplay = document.getElementById("status"), // Corrigido: O statusDisplay está de volta
+      statusDisplay = document.getElementById("status"), // Versão estável que usa o statusDisplay
       loader = document.getElementById("loader"), 
       previewSection = document.getElementById("previewSection"), 
       qrSection = document.getElementById("qrSection"), 
       resultSection = document.getElementById("resultSection");
 
 // --- Constantes de Configuração ---
-const CLOUD_NAME = "dbfrnidmb"; // Meu nome de nuvem do Cloudinary
-const SIGNATURE_ENDPOINT = "/.netlify/functions/generate-signature"; // Endereço da minha função de assinatura
-const SHORTEN_ENDPOINT = "/.netlify/functions/shorten"; // Endereço da minha função de encurtar link
+const CLOUD_NAME = "dbfrnidmb";
+const SIGNATURE_ENDPOINT = "/.netlify/functions/generate-signature";
+const SHORTEN_ENDPOINT = "/.netlify/functions/shorten";
 
-/**
- * Minha função principal que orquestra todo o processo de upload.
- * @param {File} file - O arquivo que o usuário selecionou.
- */
 async function uploadFile(file) {
-    // 1. Eu reseto a interface, mostrando o loader e escondendo resultados antigos.
+    // 1. Eu reseto a interface.
     loader.style.display = "block";
     statusDisplay.style.display = "none";
     previewSection.style.display = "none";
@@ -33,13 +29,13 @@ async function uploadFile(file) {
     filePreview.style.display = "none";
 
     try {
-        // 2. Eu determino o tipo de recurso para ser explícito com o Cloudinary.
+        // 2. Eu determino o tipo de recurso.
         let resourceType = 'raw';
         if (file.type.startsWith('image/')) resourceType = 'image';
         if (file.type.startsWith('video/')) resourceType = 'video';
         const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`;
 
-        // 3. Eu peço a "permissão" (assinatura) para minha função Netlify.
+        // 3. Eu peço a assinatura.
         statusDisplay.style.color = '#A6ACCD';
         statusDisplay.textContent = "Obtendo permissão para upload...";
         statusDisplay.style.display = "block";
@@ -47,7 +43,7 @@ async function uploadFile(file) {
         if (!signatureResponse.ok) throw new Error('Falha ao obter assinatura do servidor.');
         const signatureData = await signatureResponse.json();
 
-        // 4. Eu monto o "pacote" de dados (FormData) para enviar ao Cloudinary.
+        // 4. Eu monto o FormData.
         const formData = new FormData();
         formData.append("file", file);
         formData.append("api_key", signatureData.api_key);
@@ -56,40 +52,31 @@ async function uploadFile(file) {
         formData.append("use_filename", "true");
         formData.append("unique_filename", "false");
 
-        // 5. Eu envio o arquivo diretamente para o Cloudinary.
+        // 5. Eu envio o arquivo.
         statusDisplay.textContent = "Enviando arquivo...";
         const uploadResponse = await fetch(UPLOAD_URL, { method: "POST", body: formData });
         const uploadedData = await uploadResponse.json();
         if (!uploadResponse.ok) throw new Error(uploadedData.error.message || 'Erro do Cloudinary.');
 
-        // 6. Eu construo a URL longa do Cloudinary de forma manual e segura.
+        // 6. Eu construo a URL longa.
         const { version, public_id, format } = uploadedData;
         let finalPublicId = public_id;
         if (format) finalPublicId += `.${format}`;
         const longUrl = `https://res.cloudinary.com/${CLOUD_NAME}/${uploadedData.resource_type}/upload/v${version}/${finalPublicId}`;
 
-        // 7. Eu peço para minha outra função Netlify encurtar o link longo.
+        // 7. Eu encurto o link.
         statusDisplay.textContent = "Criando link curto...";
-        const shortenResponse = await fetch(SHORTEN_ENDPOINT, {
-            method: 'POST',
-            body: JSON.stringify({ longUrl: longUrl })
-        });
+        const shortenResponse = await fetch(SHORTEN_ENDPOINT, { method: 'POST', body: JSON.stringify({ longUrl: longUrl }) });
         if (!shortenResponse.ok) throw new Error('Falha ao criar o link curto.');
         const { slug } = await shortenResponse.json();
         const shortUrl = `${window.location.origin}/s/${slug}`;
         
         // --- INTEGRAÇÃO POSTHOG: SUCESSO ---
         if (window.posthog) {
-            posthog.capture('upload_success', {
-                file_name: file.name,
-                file_size: file.size,
-                file_type: file.type,
-                short_url: shortUrl,
-                long_url: longUrl
-            });
+            posthog.capture('upload_success', { file_name: file.name, file_size: file.size, file_type: file.type, short_url: shortUrl, long_url: longUrl });
         }
 
-        // 8. Eu exibo todos os resultados na tela.
+        // 8. Eu exibo os resultados.
         previewSection.style.display = "flex";
         if (resourceType === "image") {
             preview.src = URL.createObjectURL(file);
@@ -107,23 +94,18 @@ async function uploadFile(file) {
         
         statusDisplay.style.color = '#4ade80';
         statusDisplay.textContent = "Upload realizado com sucesso!";
+        statusDisplay.style.display = "block"; // Garante que a mensagem de sucesso seja exibida
 
     } catch (err) {
         // --- INTEGRAÇÃO POSTHOG: FALHA ---
         if (window.posthog) {
-            posthog.capture('upload_failed', {
-                file_name: file ? file.name : 'unknown',
-                file_size: file ? file.size : 0,
-                error_message: err.message
-            });
+            posthog.capture('upload_failed', { file_name: file ? file.name : 'unknown', file_size: file ? file.size : 0, error_message: err.message });
         }
         
-        // Se qualquer passo acima falhar, eu mostro uma mensagem de erro.
         statusDisplay.style.color = '#f87171';
         statusDisplay.textContent = "Erro: " + err.message;
         statusDisplay.style.display = "block";
     } finally {
-        // Independentemente de sucesso ou falha, eu escondo o loader no final.
         loader.style.display = "none";
     }
 }
