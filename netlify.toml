@@ -12,7 +12,6 @@
     Referrer-Policy = "no-referrer"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
     
-    # ATUALIZAÇÃO: Política de segurança estável que permite Google Analytics e PostHog
     Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://cdn.jsdelivr.net https://us.i.posthog.com https://us-assets.i.posthog.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://res.cloudinary.com data: blob:; connect-src 'self' https://api.cloudinary.com https://www.google-analytics.com https://us.i.posthog.com;"
 
 # --- Regra de Redirecionamento para o Encurtador ---
