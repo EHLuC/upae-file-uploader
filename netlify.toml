@@ -1,15 +1,13 @@
 # --- Configuração de Build ---
 [build]
   functions = "netlify/functions"
+  publish = "."
 
-# --- Regra de Renderização Segura do Index ---
-# Aqui eu faço com que a página inicial seja renderizada pela função render-index
-# Em vez de servir o HTML direto do repositório, a função injeta as variáveis
-# de ambiente primeiro. Assim nenhum secret fica exposto no repositório público.
 [[redirects]]
   from = "/"
   to = "/.netlify/functions/render-index"
   status = 200
+  force = true
 
 # --- Regras de Cabeçalho de Segurança ---
 [[headers]]
