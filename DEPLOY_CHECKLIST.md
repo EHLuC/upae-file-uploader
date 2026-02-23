@@ -60,7 +60,7 @@ Abrir: https://upae.com.br
 
 ```javascript
 // Verificar se as variáveis foram injetadas
-console.log(window.__CLOUD_NAME__); // Deve mostrar "REDACTED_CLOUD_NAME"
+console.log(window.__CLOUD_NAME__); // Deve mostrar seu cloud name
 console.log(window.__POSTHOG_KEY__); // Deve começar com "phc_"
 ```
 
@@ -86,11 +86,7 @@ document.querySelector('meta[name="posthog-key"]').content;
 ### 4. Regenerar TODAS as Credenciais
 
 **⚠️ POR QUÊ?**  
-As novas credenciais foram EXPOSTAS na conversa do chat:
-
-- PostHog: `REDACTED_POSTHOG_KEY`
-- Cloudinary: `REDACTED_API_KEY` / `REDACTED_API_SECRET`
-- Supabase: `REDACTED_SUPABASE_KEY`
+As credenciais foram expostas em conversas/logs anteriores e devem ser rotacionadas por segurança.
 
 ### Passo a Passo:
 

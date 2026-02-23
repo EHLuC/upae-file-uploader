@@ -5,6 +5,7 @@
 O site está quebrado porque as **variáveis de ambiente não estão configuradas** no Netlify.
 
 **Erro identificado:**
+
 ```
 ✗ Metatag cloudinary-name foi injetada
 ```
@@ -24,36 +25,39 @@ Isso significa que `CLOUDINARY_CLOUD_NAME` não foi configurada.
 ### 3. Adicionar cada variável abaixo:
 
 #### Cloudinary
+
 ```
 Key: CLOUDINARY_CLOUD_NAME
-Value: REDACTED_CLOUD_NAME
+Value: <SEU_CLOUD_NAME_AQUI>
 ```
 
 ```
 Key: CLOUDINARY_API_KEY
-Value: REDACTED_API_KEY
+Value: <SUA_API_KEY_AQUI>
 ```
 
 ```
 Key: CLOUDINARY_API_SECRET
-Value: REDACTED_API_SECRET
+Value: <SEU_API_SECRET_AQUI>
 ```
 
 #### PostHog (Analytics)
+
 ```
 Key: POSTHOG_KEY
-Value: REDACTED_POSTHOG_KEY
+Value: <SUA_POSTHOG_KEY_AQUI>
 ```
 
 #### Supabase (Banco de Dados para Links Curtos)
+
 ```
 Key: SUPABASE_URL
-Value: https://REDACTED_SUPABASE_PROJECT.supabase.co
+Value: https://<SEU_PROJETO>.supabase.co
 ```
 
 ```
 Key: SUPABASE_ANON_KEY
-Value: REDACTED_SUPABASE_KEY
+Value: <SUA_SUPABASE_ANON_KEY_AQUI>
 ```
 
 ### 4. Salvar e Aguardar Redeploy
@@ -71,6 +75,7 @@ node validate-deploy.js
 ```
 
 **Resultado esperado:**
+
 ```
 ✓ Metatag cloudinary-name foi injetada
 Total: 14
@@ -107,18 +112,22 @@ Depois, atualizar as variáveis no Netlify com os **novos valores**.
 ## 📸 Guia Visual
 
 ### Passo 1: Acessar Environment Variables
+
 ![Netlify Settings](https://app.netlify.com/sites/ehluc/settings/env)
 
 ### Passo 2: Adicionar Variável
+
 - Clicar em **"Add a variable"**
 - Preencher **Key** (ex: `CLOUDINARY_CLOUD_NAME`)
-- Preencher **Value** (ex: `REDACTED_CLOUD_NAME`)
-- Clicar em **"Create variable"**
+- Preencher **Value** com sua credencial real (obtenha no dashboard do serviço)
+- Clicar em \*\*"Create variable"
 
 ### Passo 3: Repetir para Todas
+
 Adicionar as 6 variáveis listadas acima.
 
 ### Passo 4: Aguardar Deploy
+
 Ver logs em: https://app.netlify.com/sites/ehluc/deploys
 
 ---
@@ -137,23 +146,25 @@ Ver logs em: https://app.netlify.com/sites/ehluc/deploys
    - Limpar
 
 3. **Verificar logs do Netlify**
+
    ```powershell
    netlify functions:log render-index
    ```
 
 4. **Testar localmente primeiro**
+
    ```powershell
    # Criar .env local
    notepad .env
-   
-   # Copiar conteúdo:
-   CLOUDINARY_CLOUD_NAME=REDACTED_CLOUD_NAME
-   CLOUDINARY_API_KEY=REDACTED_API_KEY
-   CLOUDINARY_API_SECRET=REDACTED_API_SECRET
-   POSTHOG_KEY=REDACTED_POSTHOG_KEY
-   SUPABASE_URL=https://REDACTED_SUPABASE_PROJECT.supabase.co
-   SUPABASE_ANON_KEY=REDACTED_SUPABASE_KEY
-   
+
+   # Copiar estrutura (substituir pelos seus valores reais):
+   CLOUDINARY_CLOUD_NAME=<seu_cloud_name>
+   CLOUDINARY_API_KEY=<sua_api_key>
+   CLOUDINARY_API_SECRET=<seu_api_secret>
+   POSTHOG_KEY=<sua_posthog_key>
+   SUPABASE_URL=https://<seu_projeto>.supabase.co
+   SUPABASE_ANON_KEY=<sua_anon_key>
+
    # Rodar localmente
    netlify dev
    ```
@@ -163,10 +174,12 @@ Ver logs em: https://app.netlify.com/sites/ehluc/deploys
 ## ✨ Resumo
 
 **O que estava errado:**
+
 - ❌ Variáveis de ambiente não configuradas no Netlify
 - ❌ Redeclaração de `const cloudName` no script.js (CORRIGIDO)
 
 **O que você precisa fazer:**
+
 1. Adicionar 6 variáveis de ambiente no Netlify
 2. Aguardar redeploy (2 minutos)
 3. Executar `node validate-deploy.js`
