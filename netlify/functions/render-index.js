@@ -23,14 +23,14 @@ exports.handler = async (event, context) => {
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME || '';
     const posthogKey = process.env.POSTHOG_KEY || '';
     
-    console.log('Env vars:', {
-      cloudName: cloudName ? `${cloudName.substring(0, 3)}...` : 'VAZIO',
-      posthogKey: posthogKey ? 'tem valor' : 'VAZIO'
-    });
+    console.log('=== RENDER INDEX DEBUG ===');
+    console.log('cloudName:', cloudName);
+    console.log('posthogKey:', posthogKey ? 'existe' : 'vazio');
+    console.log('HTML tem metatag?', html.includes('cloudinary-name'));
+    console.log('HTML tem metatag vazia?', html.includes('content=""'));
     
-    if (!cloudName) {
-      console.error('CLOUDINARY_CLOUD_NAME não configurada!');
-    }
+    const beforeReplace = html.includes('<meta name="cloudinary-name" content="">');
+    console.log('Antes do replace, metatag existe?', beforeReplace);
     
     html = html.replace(
       '<meta name="cloudinary-name" content="">',
@@ -42,11 +42,15 @@ exports.handler = async (event, context) => {
       `<meta name="posthog-key" content="${posthogKey}">`
     );
     
+    const afterReplace = html.includes(`content="${cloudName}"`);
+    console.log('Depois do replace, tem o valor?', afterReplace);
+    console.log('=========================');
+    
     return {
       statusCode: 200,
       headers: {
         'Content-Type': 'text/html; charset=UTF-8',
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY',
         'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload'
