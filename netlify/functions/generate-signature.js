@@ -34,12 +34,13 @@ cloudinary.config({
 });
 
 // Configuração de assinatura segura
+// IMPORTANTE: Apenas parâmetros que também serão enviados no upload!
+// O Cloudinary valida que a assinatura foi gerada com os MESMOS parâmetros
+// Valores devem ser strings porque FormData converte tudo para string
 const SIGNATURE_CONFIG = {
   timestamp: null, // Será preenchido
-  use_filename: true,
-  unique_filename: false,
-  resource_type: 'auto',
-  type: 'upload'
+  use_filename: 'true',
+  unique_filename: 'false'
 };
 
 // Validade da assinatura em segundos

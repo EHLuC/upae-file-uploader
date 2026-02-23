@@ -131,10 +131,6 @@ async function validate() {
     console.log(`3. Testar se link curto funciona`);
     console.log(`4. Verificar analytics no PostHog\n`);
     
-    console.log(`${colors.red}⚠️ LEMBRETE CRÍTICO:${colors.reset}`);
-    console.log(`As credenciais foram expostas no chat!`);
-    console.log(`Você DEVE regenerá-las NOVAMENTE e atualizar no Netlify.\n`);
-    
     process.exit(0);
   } else {
     console.log(`${colors.red}❌ ${testsFailed} teste(s) falharam!${colors.reset}`);
