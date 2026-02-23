@@ -17,7 +17,7 @@ const path = require('path');
 
 exports.handler = async (event, context) => {
   try {
-    const htmlPath = path.join(__dirname, '..', '..', 'index.html');
+    const htmlPath = path.join(__dirname, 'index.template.html');
     let html = fs.readFileSync(htmlPath, 'utf8');
     
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME || '';
