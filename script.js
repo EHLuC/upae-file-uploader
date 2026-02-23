@@ -78,11 +78,32 @@ const handleUpload = async (file) => {
       throw new Error('Cloudinary retornou dados inválidos');
     }
 
+    // Log pra debug - ver o que o Cloudinary retornou
+    console.log('📦 Resposta do Cloudinary:', { public_id, format, version, resource_type });
+
     // --- CONSTRUIR URL LONGA ---
-    // Eu reuso a variável cloudName que já declarei lá em cima (linha 43)
+    // Eu reuso a variável cloudName que já declarei lá em cima
     // para construir a URL final do arquivo no Cloudinary
+    // 
+    // IMPORTANTE: PDFs e arquivos raw precisam de resource_type correto!
+    // O Cloudinary às vezes retorna "image" pra tudo quando uso /auto/upload
+    // Então eu corrijo manualmente baseado no tipo MIME do arquivo original
+    let finalResourceType = resource_type;
+    
+    // Listas de tipos que sei como classificar
+    const imageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/svg+xml'];
+    const videoTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo'];
+    
+    // Se o arquivo original não é imagem nem vídeo, forço "raw"
+    if (!imageTypes.includes(file.type) && !videoTypes.includes(file.type)) {
+      finalResourceType = 'raw';
+      console.log('🔧 Corrigindo resource_type para "raw" porque tipo MIME é:', file.type);
+    }
+    
     const formatSuffix = format ? `.${format}` : '';
-    const longUrl = `https://res.cloudinary.com/${cloudName}/${resource_type}/upload/v${version}/${public_id}${formatSuffix}`;
+    const longUrl = `https://res.cloudinary.com/${cloudName}/${finalResourceType}/upload/v${version}/${public_id}${formatSuffix}`;
+    
+    console.log('🔗 URL construída:', longUrl);
 
     // Valido se a URL foi construída correctamente e é segura
     if (!FileValidator.isSafeUrl(longUrl)) {
