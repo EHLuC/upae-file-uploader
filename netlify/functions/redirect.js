@@ -60,12 +60,25 @@ exports.handler = async (event) => {
       };
     }
 
-    // Extrair slug do caminho da URL
+    // Extrair slug do caminho da URL ou da query string
     // Ex: "/s/coxinha-feliz" -> "coxinha-feliz"
+    // Ou: "?slug=coxinha-feliz" -> "coxinha-feliz"
+    let slug = null;
+    
+    // Tentar pegar do path primeiro
     const pathParts = event.path.split('/');
     const slugIndex = pathParts.indexOf('s');
+    if (slugIndex !== -1 && pathParts[slugIndex + 1]) {
+      slug = pathParts[slugIndex + 1].split('?')[0]; // Remove query strings
+    }
     
-    if (slugIndex === -1 || !pathParts[slugIndex + 1]) {
+    // Se não achou no path, tenta pegar da query string
+    if (!slug && event.queryStringParameters?.slug) {
+      slug = event.queryStringParameters.slug;
+    }
+    
+    // Se ainda não tem slug, redireciona pra home
+    if (!slug) {
       return {
         statusCode: 302,
         headers: {
@@ -75,8 +88,6 @@ exports.handler = async (event) => {
         body: ''
       };
     }
-
-    const slug = pathParts[slugIndex + 1].split('?')[0]; // Remove query strings
 
     // Validação rigorosa do slug
     if (!validateSlug(slug)) {

@@ -5,10 +5,12 @@
 
 # --- Redirects ---
 # Redireciono links curtos tipo /s/abc123 pra função que busca no banco
+# Uso status 200 para rewrite interno (invisible redirect)
 [[redirects]]
   from = "/s/:slug"
-  to = "/.netlify/functions/redirect?slug=:slug"
-  status = 302
+  to = "/.netlify/functions/redirect"
+  status = 200
+  force = true
 
 # --- Security Headers ---
 # Headers de segurança pra proteger contra XSS, clickjacking, etc
