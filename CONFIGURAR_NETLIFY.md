@@ -1,190 +1,83 @@
-# 🚨 CONFIGURAÇÃO OBRIGATÓRIA DO NETLIFY
+# Setup das Variáveis de Ambiente
 
-## Problema Atual
+Se o site não tá funcionando, provavelmente é porque as variáveis de ambiente não foram configuradas no Netlify. Isso aqui é bem rápido de resolver.
 
-O site está quebrado porque as **variáveis de ambiente não estão configuradas** no Netlify.
+## Como resolver
 
-**Erro identificado:**
+Você vai precisar adicionar algumas variáveis no painel do Netlify. Leva uns 5 minutos no máximo.
 
-```
-✗ Metatag cloudinary-name foi injetada
-```
+### 1. Entrar no dashboard do Netlify
 
-Isso significa que `CLOUDINARY_CLOUD_NAME` não foi configurada.
+Vai em: https://app.netlify.com/sites/ehluc/settings/env
 
----
+### 2. Adicionar as variáveis
 
-## ⚡ Solução Rápida (5 minutos)
+Clica em "Add a variable" e adiciona essas 6 variáveis:
 
-### 1. Acessar Dashboard do Netlify
+**Cloudinary** (pra armazenar os arquivos):
+- `CLOUDINARY_CLOUD_NAME` - Pega no dashboard do Cloudinary
+- `CLOUDINARY_API_KEY` - Também no dashboard
+- `CLOUDINARY_API_SECRET` - Fica em Settings → Access Keys
 
-**URL:** https://app.netlify.com/sites/ehluc/settings/env
+**PostHog** (analytics):
+- `POSTHOG_KEY` - Começa com `phc_`, pega em Project Settings
 
-### 2. Clicar em "Add a variable"
+**Supabase** (banco de dados pros links curtos):  
+- `SUPABASE_URL` - URL do seu projeto  
+- `SUPABASE_ANON_KEY` - A chave pública (anon/public)
 
-### 3. Adicionar cada variável abaixo:
+### 3. Esperar o redeploy
 
-#### Cloudinary
+Depois de salvar, o Netlify faz redeploy automático. Leva 1-2 minutos.
 
-```
-Key: CLOUDINARY_CLOUD_NAME
-Value: <SEU_CLOUD_NAME_AQUI>
-```
+## Testar se funcionou
 
-```
-Key: CLOUDINARY_API_KEY
-Value: <SUA_API_KEY_AQUI>
-```
+Depois disso, pode rodar:
 
-```
-Key: CLOUDINARY_API_SECRET
-Value: <SEU_API_SECRET_AQUI>
-```
-
-#### PostHog (Analytics)
-
-```
-Key: POSTHOG_KEY
-Value: <SUA_POSTHOG_KEY_AQUI>
-```
-
-#### Supabase (Banco de Dados para Links Curtos)
-
-```
-Key: SUPABASE_URL
-Value: https://<SEU_PROJETO>.supabase.co
-```
-
-```
-Key: SUPABASE_ANON_KEY
-Value: <SUA_SUPABASE_ANON_KEY_AQUI>
-```
-
-### 4. Salvar e Aguardar Redeploy
-
-O Netlify vai fazer **redeploy automático** (1-2 minutos).
-
----
-
-## ✅ Validar Configuração
-
-Após o redeploy terminar:
-
-```powershell
+```bash
 node validate-deploy.js
 ```
 
-**Resultado esperado:**
+Ou simplesmente tentar fazer upload de um arquivo em https://upae.com.br
 
+## Se ainda não funcionar
+
+**Cache do navegador pode estar zuando:**
+- `Ctrl + Shift + R` pra recarregar forçando
+
+**Ver os logs do deploy:**
+- https://app.netlify.com/sites/ehluc/deploys
+- Procura por erros em vermelho
+
+**Testar localmente primeiro:**
+```bash
+# Cria um .env local com suas credenciais
+echo "CLOUDINARY_CLOUD_NAME=seu_cloud_name" > .env
+echo "CLOUDINARY_API_KEY=sua_api_key" >> .env  
+echo "CLOUDINARY_API_SECRET=seu_secret" >> .env
+echo "POSTHOG_KEY=sua_key" >> .env
+echo "SUPABASE_URL=https://seu_projeto.supabase.co" >> .env
+echo "SUPABASE_ANON_KEY=sua_anon_key" >> .env
+
+# Roda localmente
+netlify dev
 ```
-✓ Metatag cloudinary-name foi injetada
-Total: 14
-Passou: 14
-Falhou: 0
-✅ SITE FUNCIONANDO CORRETAMENTE!
-```
 
----
+## Onde pegar cada credencial
 
-## 🧪 Testar Upload
+**Cloudinary:**
+- Login: https://console.cloudinary.com/console
+- Cloud Name tá ali no topo
+- API Key e Secret em Settings → Access Keys
 
-1. Abrir: https://upae.com.br
-2. Arrastar uma imagem
-3. Verificar se QR Code é gerado
-4. Testar link curto
+**PostHog:**
+- Login: https://app.posthog.com/project/settings  
+- Project API Key na seção "Project Variables"
 
----
+**Supabase:**
+- Login: https://app.supabase.com/project/_/settings/api
+- URL do projeto e Anon Key tão ali
 
-## 🔒 Lembrete de Segurança
+## Nota sobre segurança
 
-⚠️ **As credenciais acima foram EXPOSTAS no chat!**
-
-Após validar que o site funciona, você DEVE:
-
-1. **Cloudinary:** https://console.cloudinary.com/settings/security → Gerar novo API Secret
-2. **PostHog:** https://app.posthog.com/project/settings → Revogar key → Gerar nova
-3. **Supabase:** https://app.supabase.com/project/REDACTED_SUPABASE_PROJECT/settings/api → Revogar key → Gerar nova
-
-Depois, atualizar as variáveis no Netlify com os **novos valores**.
-
----
-
-## 📸 Guia Visual
-
-### Passo 1: Acessar Environment Variables
-
-![Netlify Settings](https://app.netlify.com/sites/ehluc/settings/env)
-
-### Passo 2: Adicionar Variável
-
-- Clicar em **"Add a variable"**
-- Preencher **Key** (ex: `CLOUDINARY_CLOUD_NAME`)
-- Preencher **Value** com sua credencial real (obtenha no dashboard do serviço)
-- Clicar em \*\*"Create variable"
-
-### Passo 3: Repetir para Todas
-
-Adicionar as 6 variáveis listadas acima.
-
-### Passo 4: Aguardar Deploy
-
-Ver logs em: https://app.netlify.com/sites/ehluc/deploys
-
----
-
-## 🆘 Troubleshooting
-
-### Site continua quebrado após configurar?
-
-1. **Verificar se redeploy terminou**
-   - Acessar: https://app.netlify.com/sites/ehluc/deploys
-   - Status deve estar "Published" (verde)
-
-2. **Limpar cache do navegador**
-   - Apertar `Ctrl + Shift + Delete`
-   - Selecionar "Cached images and files"
-   - Limpar
-
-3. **Verificar logs do Netlify**
-
-   ```powershell
-   netlify functions:log render-index
-   ```
-
-4. **Testar localmente primeiro**
-
-   ```powershell
-   # Criar .env local
-   notepad .env
-
-   # Copiar estrutura (substituir pelos seus valores reais):
-   CLOUDINARY_CLOUD_NAME=<seu_cloud_name>
-   CLOUDINARY_API_KEY=<sua_api_key>
-   CLOUDINARY_API_SECRET=<seu_api_secret>
-   POSTHOG_KEY=<sua_posthog_key>
-   SUPABASE_URL=https://<seu_projeto>.supabase.co
-   SUPABASE_ANON_KEY=<sua_anon_key>
-
-   # Rodar localmente
-   netlify dev
-   ```
-
----
-
-## ✨ Resumo
-
-**O que estava errado:**
-
-- ❌ Variáveis de ambiente não configuradas no Netlify
-- ❌ Redeclaração de `const cloudName` no script.js (CORRIGIDO)
-
-**O que você precisa fazer:**
-
-1. Adicionar 6 variáveis de ambiente no Netlify
-2. Aguardar redeploy (2 minutos)
-3. Executar `node validate-deploy.js`
-4. Testar upload no site
-
-**Tempo total:** 5 minutos
-
-**Depois:** Regenerar todas as credenciais por segurança.
+Se você expôs suas credenciais em algum lugar (chat, commit do git, etc), roda no painel de cada serviço e gera novas. Melhor prevenir.

@@ -1,77 +1,106 @@
-# Upaê File Uploader 🚀
+# Upaê 📤
 
-![Prévia do Upaê File Uploader](https://upae.com.br/social-preview.png)
+Um uploader de arquivos bem simples pra compartilhar coisas rápido. Arrasta e solta, pega o link curto, manda pro celular via QR code. Bem direto.
 
-> Aplicação web para upload e compartilhamento rápido de arquivos, com encurtador de links próprio. Construído com JavaScript puro e uma arquitetura serverless moderna.
-
-**Acesse o site ao vivo:** **[upae.com.br](https://upae.com.br/)**
+**Site:** [upae.com.br](https://upae.com.br/)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Netlify Status](https://api.netlify.com/api/v1/badges/95a7eac0-b9ce-47f7-9216-5a2441e30301/deploy-status)](https://app.netlify.com/sites/ehluc/deploys)
 
 ---
 
-## 📋 Sobre o Projeto
+## O que é isso?
 
-O **Upaê** nasceu de uma jornada de aprendizado, começando com um simples erro de `NetworkError` e evoluindo para uma aplicação web completa. O objetivo é fornecer uma ferramenta minimalista e eficiente para o upload temporário e compartilhamento de arquivos de qualquer tipo, gerando links curtos e QR Codes instantaneamente.
+Fiz esse projeto pra poder mandar arquivos do meu PC pro celular sem precisar plugar cabo ou ficar mandando por email. A ideia era simples: joga o arquivo, pega um link curto, escaneia o QR code pronto.
 
-Este projeto foi construído do zero, explorando conceitos de desenvolvimento front-end, back-end serverless, integração com APIs de terceiros e gerenciamento de banco de dados.
+Começou com um erro de rede bem chato e foi evoluindo até virar uma aplicação completa com banco de dados, API segura e tal. Acabou virando um bom estudo de caso de arquitetura serverless.
 
-## ✨ Principais Funcionalidades
+## O que dá pra fazer?
 
-- **Upload de Qualquer Arquivo:** Arraste e solte ou selecione imagens, PDFs, ZIPs, etc. (limite de 10 MB no plano atual).
-- **Armazenamento em Nuvem:** Integração segura com o **Cloudinary** para armazenamento robusto de arquivos.
-- **Encurtador de Links Próprio:** Gera links curtos e amigáveis (ex: `/s/coxinha-feliz`) para cada upload, com tecnologia **Supabase**.
-- **Nomes de Arquivo Originais:** Mantém o nome original do arquivo no link final para fácil identificação.
-- **Geração de QR Code:** Cria um QR Code instantâneo para compartilhamento rápido entre desktop e mobile.
-- **Design Moderno:** Interface com tema escuro (Palenight), responsiva e amigável.
-- **Segurança:** Configurado com cabeçalhos de segurança HTTP para proteção contra ataques comuns, alcançando nota A no Security Headers.
+- **Upload de qualquer coisa** - Imagens, PDFs, ZIPs, o que for. Limite de 10MB
+- **Link curto automático** - Em vez de uma URL gigante, você tem algo tipo `upae.com.br/s/gato-feliz`  
+- **QR Code na hora** - Escaneia e já abre no celular
+- **Mantém o nome original** - Útil pra saber o que é o arquivo depois
+- **Tema escuro** - Porque clarinho cansa a vista
 
-## 🛠️ Tecnologias Utilizadas
+## Stack
 
-Este projeto foi construído utilizando a filosofia Jamstack, com uma arquitetura serverless.
+Isso é um Jamstack puro:
 
-- **Front-end:** HTML5, CSS3, JavaScript (Vanilla JS)
-- **Back-end (Serverless):** Netlify Functions (Node.js)
-- **Hospedagem e Deploy:** Netlify
-- **Armazenamento de Arquivos:** Cloudinary
-- **Banco de Dados:** Supabase (PostgreSQL)
-- **Análise de Dados:** Google Analytics
+- **Frontend**: HTML, CSS e JavaScript vanilla (sem frameworks porque não precisava)
+- **Backend**: Netlify Functions rodando Node.js
+- **Storage**: Cloudinary pra guardar os arquivos
+- **Database**: Supabase (PostgreSQL) pra armazenar os links curtos  
+- **Analytics**: PostHog e Google Analytics
 
-## ⚙️ Como Executar o Projeto Localmente
+## Rodar localmente
 
-Para rodar este projeto no seu próprio ambiente:
+Se quiser testar na sua máquina:
 
-1.  **Clone o repositório:**
-    ```bash
-    git clone [https://github.com/EHLuC/upae-file-uploader.git](https://github.com/EHLuC/upae-file-uploader.git)
-    ```
-2.  **Entre na pasta do projeto:**
-    ```bash
-    cd upae-file-uploader
-    ```
-3.  **Instale as dependências:**
-    ```bash
-    npm install
-    ```
-4.  **Configure as Variáveis de Ambiente:**
-    Você precisará de contas no Netlify, Cloudinary e Supabase. Configure as seguintes variáveis de ambiente no painel do seu site no Netlify (ou em um arquivo `.env` para teste local):
+```bash
+git clone https://github.com/EHLuC/upae-file-uploader.git
+cd upae-file-uploader
+npm install
+```
 
-    - `CLOUDINARY_CLOUD_NAME`
-    - `CLOUDINARY_API_KEY`
-    - `CLOUDINARY_API_SECRET`
-    - `SUPABASE_URL`
-    - `SUPABASE_KEY` (use a chave `service_role`)
+Vai precisar criar contas gratuitas no Cloudinary, Supabase e PostHog. Depois configura as variáveis de ambiente no Netlify (ou local via `.env`):
 
-5.  **Inicie o servidor de desenvolvimento:**
-    ```bash
-    netlify dev
-    ```
+- `CLOUDINARY_CLOUD_NAME`
+- `CLOUDINARY_API_KEY`
+- `CLOUDINARY_API_SECRET`
+- `SUPABASE_URL`  
+- `SUPABASE_ANON_KEY`
+- `POSTHOG_KEY`
 
-## 📄 Licença
+Pra rodar:
 
-Este projeto está sob a Licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+```bash
+netlify dev
+```
+
+Abre no `localhost:8888`
+
+## Estrutura do projeto
+
+```
+/
+├── index.html              # Página principal
+├── style.css               # Estilo (tema Palenight)
+├── script.js               # Lógica principal de upload  
+├── config.js               # Lê variáveis de ambiente
+├── js/
+│   ├── validation.js       # Valida arquivos antes de enviar
+│   ├── api-client.js       # Requests pro backend
+│   └── ui-manager.js       # Cuida da interface
+└── netlify/functions/
+    ├── render-index.js     # Injeta env vars no HTML
+    ├── generate-signature.js  # Assina requests pro Cloudinary
+    ├── shorten.js          # Cria links curtos
+    ├── redirect.js         # Redireciona links curtos
+    └── lib/
+        └── security.js     # Rate limiting, validação, etc
+```
+
+## Segurança
+
+- Rate limiting de 30 requisições por minuto por IP
+- CORS configurado direitinho  
+- CSP headers sem unsafe-inline
+- Nenhuma credencial hardcoded (tudo via env vars)
+- Validação de entrada no frontend e backend
+
+## O que quero adicionar depois
+
+- [ ] Autenticação pra ter histórico de uploads
+- [ ] Uploads privados com senha
+- [ ] Upload de múltiplos arquivos de uma vez
+- [ ] Preview de vídeos
+- [ ] Expiration automática dos links
+
+## Licença
+
+MIT. Usa como quiser.
 
 ---
 
-Feito com ❤️ por **Lucas Cassiano** ([EHLuC](https://github.com/EHLuC)).
+Feito por **Lucas Cassiano** ([EHLuC](https://github.com/EHLuC)) - Esse foi meu projeto de aprendizado de serverless. A "décima quinta tentativa" não é brincadeira 😅

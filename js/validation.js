@@ -103,14 +103,20 @@ const isSafeUrl = (url) => {
 const validateJsonResponse = async (response, context) => {
   if (!response.ok) {
     // Se deu erro, trato o erro de forma amigável
-    const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
-    throw new Error(errorData.error || `Erro ${response.status}: ${context}`);
+    let errorMsg = `Erro ${response.status}`;
+    try {
+      const errorData = await response.json();
+      errorMsg = errorData.error || errorData.message || JSON.stringify(errorData) || errorMsg;
+    } catch {
+      errorMsg = await response.text().catch(() => errorMsg);
+    }
+    throw new Error(`${context}: ${errorMsg}`);
   }
 
   try {
     return await response.json();
-  } catch {
-    throw new Error(`Resposta inválida do servidor: ${context}`);
+  } catch (error) {
+    throw new Error(`Resposta inválida do servidor em ${context}`);
   }
 };
 
