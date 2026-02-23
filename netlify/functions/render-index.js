@@ -17,24 +17,21 @@ const path = require('path');
 
 exports.handler = async (event, context) => {
   try {
-    // Aqui eu leio o arquivo index.html que está na raiz do projeto
     const htmlPath = path.join(__dirname, '..', '..', 'index.html');
     let html = fs.readFileSync(htmlPath, 'utf8');
     
-    // Pego as variáveis de ambiente. Se não tiverem sido configuradas,
-    // fico com valores de fallback
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME || '';
     const posthogKey = process.env.POSTHOG_KEY || '';
     
-    // Aviso se as variáveis de ambiente não estiverem configuradas
+    console.log('Env vars:', {
+      cloudName: cloudName ? `${cloudName.substring(0, 3)}...` : 'VAZIO',
+      posthogKey: posthogKey ? 'tem valor' : 'VAZIO'
+    });
+    
     if (!cloudName) {
-      console.error('⚠️ CLOUDINARY_CLOUD_NAME não configurada! Configure em: https://app.netlify.com/sites/ehluc/settings/env');
-    }
-    if (!posthogKey) {
-      console.warn('⚠️ POSTHOG_KEY não configurada (analytics desabilitado)');
+      console.error('CLOUDINARY_CLOUD_NAME não configurada!');
     }
     
-    // Aqui eu faço a mágica: troco as metatags vazias pelos valores reais
     html = html.replace(
       '<meta name="cloudinary-name" content="">',
       `<meta name="cloudinary-name" content="${cloudName}">`
@@ -45,14 +42,11 @@ exports.handler = async (event, context) => {
       `<meta name="posthog-key" content="${posthogKey}">`
     );
     
-    // Retorno o HTML modificado para o navegador do usuário
     return {
       statusCode: 200,
       headers: {
         'Content-Type': 'text/html; charset=UTF-8',
-        'Cache-Control': 'public, max-age=300', // Cache por 5 minutos
-        
-        // Headers de segurança que eu sempre adiciono
+        'Cache-Control': 'no-cache',
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY',
         'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload'
@@ -61,13 +55,12 @@ exports.handler = async (event, context) => {
     };
     
   } catch (error) {
-    // Se algo der errado ao ler o arquivo, logar e retornar erro genérico
-    console.error('Erro ao renderizar index.html:', error);
+    console.error('Erro ao renderizar:', error);
     
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'text/plain' },
-      body: 'Erro ao carregar página. Tente novamente mais tarde.'
+      body: 'Erro ao carregar página'
     };
   }
 };

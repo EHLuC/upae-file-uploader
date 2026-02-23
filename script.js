@@ -118,10 +118,18 @@ const handleUpload = async (file) => {
     UIManager.showStatus('Upload realizado com sucesso!', 'success');
 
   } catch (error) {
-    // --- TRATAMENTO DE ERRO ---
-    const errorMessage = error.message || 'Erro desconhecido';
+    let errorMessage = 'Erro desconhecido';
+    
+    if (typeof error === 'string') {
+      errorMessage = error;
+    } else if (error.message) {
+      errorMessage = error.message;
+    } else if (error.error) {
+      errorMessage = error.error;
+    } else {
+      errorMessage = JSON.stringify(error);
+    }
 
-    // Registrar erro
     if (window.posthog) {
       posthog.capture('upload_failed', {
         file_name: file?.name || 'unknown',
