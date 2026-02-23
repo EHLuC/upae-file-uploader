@@ -69,15 +69,17 @@ async function validate() {
     
     const html = homeResponse.body;
     
-    // Teste 2: Metatags foram injetadas
-    console.log(`\n${colors.yellow}Testando injeção de metatags...${colors.reset}`);
-    const hasCloudinaryMeta = html.includes('meta name="cloudinary-name"') && 
-                               html.includes('content="') && 
-                               !html.includes('content=""');
-    test('Metatag cloudinary-name foi injetada', hasCloudinaryMeta);
-    
-    const hasPosthogMeta = html.includes('meta name="posthog-key"');
-    test('Metatag posthog-key existe', hasPosthogMeta);
+    // Teste 2: Configuração via endpoint (não mais metatags)
+    console.log(`\n${colors.yellow}Testando configuração via endpoint...${colors.reset}`);
+    try {
+      const configResponse = await httpGet(`${SITE_URL}/.netlify/functions/config`);
+      const config = JSON.parse(configResponse.body);
+      test('Config endpoint retorna cloudName correto', config.cloudName === 'dwkuyotin');
+      test('Config endpoint retorna posthogKey válido', config.posthogKey && config.posthogKey.startsWith('phc_'));
+    } catch (err) {
+      test('Config endpoint retorna cloudName correto', false);
+      test('Config endpoint retorna posthogKey válido', false);
+    }
     
     // Teste 3: Scripts necessários presentes
     console.log(`\n${colors.yellow}Testando presença de scripts...${colors.reset}`);

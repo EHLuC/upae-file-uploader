@@ -68,9 +68,8 @@ const handleUpload = async (file) => {
     try {
       cloudinaryResponse = await ApiClient.uploadToCloudinary(file, signatureData);
     } catch (error) {
-      // Serializo o erro corretamente, porque às vezes vem objeto complexo
-      const errorMsg = error.message || error.error || (typeof error === 'string' ? error : JSON.stringify(error));
-      throw new Error(errorMsg || 'Falha no upload');
+      // Uso a função serializeError pra garantir que sempre tenho string legível
+      throw new Error(FileValidator.serializeError(error) || 'Falha no upload');
     }
 
     // --- VALIDAR RESPOSTA DO CLOUDINARY ---
@@ -124,17 +123,8 @@ const handleUpload = async (file) => {
     UIManager.showStatus('Upload realizado com sucesso!', 'success');
 
   } catch (error) {
-    let errorMessage = 'Erro desconhecido';
-    
-    if (typeof error === 'string') {
-      errorMessage = error;
-    } else if (error.message) {
-      errorMessage = error.message;
-    } else if (error.error) {
-      errorMessage = error.error;
-    } else {
-      errorMessage = JSON.stringify(error);
-    }
+    // Uso serializeError pra garantir que nunca mostro [object Object] pro usuário
+    const errorMessage = FileValidator.serializeError(error) || 'Erro desconhecido';
 
     if (window.posthog) {
       posthog.capture('upload_failed', {

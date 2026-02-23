@@ -97,6 +97,22 @@ const isSafeUrl = (url) => {
 };
 
 /**
+ * Função auxiliar que garante que qualquer erro vira string legível.
+ * Isso evita o maldito [object Object] que aparece quando tento fazer throw de objeto.
+ */
+const serializeError = (error) => {
+  if (typeof error === 'string') return error;
+  if (error instanceof Error) return error.message;
+  if (error && error.error) return String(error.error);
+  if (error && error.message) return String(error.message);
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error) || 'Erro desconhecido';
+  }
+};
+
+/**
  * Quando eu recebo uma resposta do servidor em JSON, eu preciso validar
  * se ela é realmente JSON válido e se o status HTTP foi de sucesso.
  */
@@ -105,11 +121,11 @@ const validateJsonResponse = async (response, context) => {
     let errorMsg = `Erro ${response.status}`;
     try {
       const errorData = await response.json();
-      if (errorData.error) errorMsg = errorData.error;
-      else if (errorData.message) errorMsg = errorData.message;
+      errorMsg = serializeError(errorData.error || errorData.message || errorData);
     } catch {
       try {
-        errorMsg = await response.text() || errorMsg;
+        const textError = await response.text();
+        if (textError) errorMsg = textError;
       } catch {}
     }
     throw new Error(errorMsg);
@@ -123,5 +139,6 @@ window.FileValidator = {
   validate: validateFile,
   isSafeUrl,
   validateJsonResponse,
+  serializeError,
   config: VALIDATION_CONFIG
 };
