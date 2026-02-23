@@ -159,6 +159,13 @@ exports.handler = async (event) => {
 
     if (insertError) {
       console.error('Database error:', insertError);
+      // Log detalhado para debug no Netlify Functions
+      console.error('Insert error details:', {
+        code: insertError.code,
+        message: insertError.message,
+        details: insertError.details,
+        hint: insertError.hint
+      });
       throw new Error('Failed to save shortened link');
     }
 

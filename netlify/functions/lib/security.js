@@ -160,8 +160,23 @@ const handleError = (error, statusCode = 500) => {
     stack: isDev ? error.stack : undefined
   });
 
-  // Não expor detalhes da stack em produção
-  const message = isDev 
+  // Lista de mensagens seguras para expor em produção
+  // Essas não revelam detalhes internos do sistema
+  const safeMessages = [
+    'Invalid JSON body',
+    'URL longa não fornecida ou é inválida',
+    'URL inválida ou não permitida',
+    'Failed to generate unique slug after maximum attempts',
+    'Generated slug does not meet requirements',
+    'Failed to save shortened link',
+    'Slug não encontrado',
+    'Method not allowed',
+    'Rate limit exceeded'
+  ];
+  
+  // Se a mensagem está na lista segura, mostro ela
+  // Senão, mostro mensagem genérica
+  const message = (isDev || safeMessages.includes(error.message))
     ? error.message 
     : 'Erro ao processar requisição';
 
