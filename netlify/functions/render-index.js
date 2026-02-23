@@ -23,8 +23,16 @@ exports.handler = async (event, context) => {
     
     // Pego as variáveis de ambiente. Se não tiverem sido configuradas,
     // fico com valores de fallback
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'demo-cloud';
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME || '';
     const posthogKey = process.env.POSTHOG_KEY || '';
+    
+    // Aviso se as variáveis de ambiente não estiverem configuradas
+    if (!cloudName) {
+      console.error('⚠️ CLOUDINARY_CLOUD_NAME não configurada! Configure em: https://app.netlify.com/sites/ehluc/settings/env');
+    }
+    if (!posthogKey) {
+      console.warn('⚠️ POSTHOG_KEY não configurada (analytics desabilitado)');
+    }
     
     // Aqui eu faço a mágica: troco as metatags vazias pelos valores reais
     html = html.replace(

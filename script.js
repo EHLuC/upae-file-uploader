@@ -74,9 +74,8 @@ const handleUpload = async (file) => {
     }
 
     // --- CONSTRUIR URL LONGA ---
-    // Eu pego o nome da minha cloud do Cloudinary de uma variável que vem do HTML
-    // Assim fico seguro que está tudo em uma variável de ambiente, não hardcoded
-    const cloudName = window.__CLOUD_NAME__ || 'default-cloud';
+    // Eu reuso a variável cloudName que já declarei lá em cima (linha 43)
+    // para construir a URL final do arquivo no Cloudinary
     const formatSuffix = format ? `.${format}` : '';
     const longUrl = `https://res.cloudinary.com/${cloudName}/${resource_type}/upload/v${version}/${public_id}${formatSuffix}`;
 
