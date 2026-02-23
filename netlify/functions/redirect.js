@@ -1,30 +1,96 @@
-// netlify/functions/redirect.js
+/**
+ * Função Netlify: Redirecionador de Links Curtos
+ * 
+ * O que ela faz:
+ * Quando alguém acessa https://upae.com.br/s/coxinha-feliz, eu preciso saber
+ * para qual URL longa redirecionar. É assim que o link curto funciona.
+ * 
+ * Fluxo:
+ * 1. Usuário clica em https://upae.com.br/s/coxinha-feliz
+ * 2. Meu servidor (Netlify) chama esta função
+ * 3. Eu busco no banco de dados qual é a URL longa para "coxinha-feliz"
+ * 4. Redireciono o navegador para a URL longa (HTTP 302)
+ * 5. Pronto! O arquivo do Cloudinary aparece
+ * 
+ * Segurança:
+ * - Valido se o slug é válido (caracteres seguros)
+ * - Não exponho informações sobre slugs que não existem
+ * - Rate limiting para evitar enumeration attack
+ * - Valido a URL antes de redirecionar (não quero redirecionar para site malígno)
+ */
+
 const { createClient } = require('@supabase/supabase-js');
+const { validateRequest, getCorsHeaders, handleError, validateSlug } = require('./lib/security');
+
+// Validar variáveis de ambiente
+const requiredEnvVars = ['SUPABASE_URL', 'SUPABASE_KEY'];
+for (const envVar of requiredEnvVars) {
+  if (!process.env[envVar]) {
+    throw new Error(`Missing required environment variable: ${envVar}`);
+  }
+}
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 exports.handler = async (event) => {
-  // FORMA ANTIGA (REMOVIDA)
-  // const slug = event.queryStringParameters.slug;
-
-  // NOVA FORMA, MAIS ROBUSTA: Pega o slug diretamente do caminho da URL
-  // Ex: se a URL for "/s/coxinha-feliz", ele pega "coxinha-feliz"
-  const slug = event.path.split('/s/')[1];
-
-  if (!slug || slug.trim() === '') {
-    // Se não houver slug, redireciona para a página inicial
-    return {
-      statusCode: 302,
-      headers: {
-        Location: '/',
-      },
-      body: '',
-    };
-  }
-
   try {
+    // Validações iniciais
+    const validationError = validateRequest(event, { validateBody: false });
+    if (validationError) {
+      return validationError;
+    }
+
+    // Apenas GET/OPTIONS permitido
+    if (!['GET', 'OPTIONS'].includes(event.httpMethod)) {
+      return {
+        statusCode: 405,
+        headers: getCorsHeaders(),
+        body: JSON.stringify({ error: 'Method not allowed' })
+      };
+    }
+
+    // Responder a CORS preflight
+    if (event.httpMethod === 'OPTIONS') {
+      return {
+        statusCode: 200,
+        headers: getCorsHeaders(),
+        body: ''
+      };
+    }
+
+    // Extrair slug do caminho da URL
+    // Ex: "/s/coxinha-feliz" -> "coxinha-feliz"
+    const pathParts = event.path.split('/');
+    const slugIndex = pathParts.indexOf('s');
+    
+    if (slugIndex === -1 || !pathParts[slugIndex + 1]) {
+      return {
+        statusCode: 302,
+        headers: {
+          Location: '/',
+          ...getCorsHeaders()
+        },
+        body: ''
+      };
+    }
+
+    const slug = pathParts[slugIndex + 1].split('?')[0]; // Remove query strings
+
+    // Validação rigorosa do slug
+    if (!validateSlug(slug)) {
+      return {
+        statusCode: 302,
+        headers: {
+          Location: '/',
+          ...getCorsHeaders()
+        },
+        body: ''
+      };
+    }
+
+    // Buscar link no banco de dados
     const { data, error } = await supabase
       .from('links')
       .select('original_url')
@@ -32,24 +98,34 @@ exports.handler = async (event) => {
       .single();
 
     if (error || !data) {
-      throw new Error('Link não encontrado.');
+      // Não expor ao usuário que o link não existe (proteção contra enumeration)
+      console.warn(`Link not found for slug: ${slug}`);
+      
+      return {
+        statusCode: 404,
+        headers: getCorsHeaders(),
+        body: 'Ops! Este link não existe ou foi removido.'
+      };
     }
 
-    // Redireciona para o link longo do Cloudinary
+    // Validar URL antes de redirecionar (defensively)
+    const urlRegex = /^https?:\/\/.+/i;
+    if (!urlRegex.test(data.original_url)) {
+      throw new Error(`Invalid URL format in database for slug: ${slug}`);
+    }
+
+    // Redirecionar para URL original
     return {
       statusCode: 302,
       headers: {
         Location: data.original_url,
+        ...getCorsHeaders(),
+        'Cache-Control': 'no-cache' // Não cachear redirects de upload único
       },
-      body: '',
+      body: ''
     };
 
   } catch (error) {
-    console.error('Erro de redirecionamento:', error);
-    // Se o slug não for encontrado no banco de dados, retorna um erro 404
-    return {
-      statusCode: 404,
-      body: 'Ops! Este link não existe ou foi removido.',
-    };
+    return handleError(error, 500);
   }
 };

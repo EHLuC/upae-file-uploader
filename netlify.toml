@@ -2,20 +2,42 @@
 [build]
   functions = "netlify/functions"
 
+# --- Regra de Renderização Segura do Index ---
+# Aqui eu faço com que a página inicial seja renderizada pela função render-index
+# Em vez de servir o HTML direto do repositório, a função injeta as variáveis
+# de ambiente primeiro. Assim nenhum secret fica exposto no repositório público.
+[[redirects]]
+  from = "/"
+  to = "/.netlify/functions/render-index"
+  status = 200
+
 # --- Regras de Cabeçalho de Segurança ---
 [[headers]]
   for = "/*"
   [headers.values]
+    # HSTS: Força HTTPS por 1 ano
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
-    X-Frame-Options = "DENY"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "no-referrer"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
     
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://cdn.jsdelivr.net https://us.i.posthog.com https://us-assets.i.posthog.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://res.cloudinary.com data: blob:; connect-src 'self' https://api.cloudinary.com https://www.google-analytics.com https://us.i.posthog.com;"
+    # Clickjacking Protection
+    X-Frame-Options = "DENY"
+    
+    # MIME sniffing Protection
+    X-Content-Type-Options = "nosniff"
+    
+    # Referrer Policy
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    
+    # Permissions Policy (substitui Feature-Policy)
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"
+    
+    # Content Security Policy (CSP) - Refine para mais segurança
+    Content-Security-Policy = "default-src 'self'; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://cdn.jsdelivr.net https://us.i.posthog.com https://us-assets.i.posthog.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://res.cloudinary.com data: blob:; connect-src 'self' https://api.cloudinary.com https://www.google-analytics.com https://us.i.posthog.com https://api.supabase.co; media-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'"
+    
+    # X-Powered-By removal (não expor tecnologia)
+    X-Powered-By = ""
 
 # --- Regra de Redirecionamento para o Encurtador ---
 [[redirects]]
   from = "/s/:slug"
   to = "/.netlify/functions/redirect?slug=:slug"
-  status = 200
+  status = 302

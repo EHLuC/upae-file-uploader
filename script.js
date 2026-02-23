@@ -1,179 +1,192 @@
-// --- Seleção dos Elementos da Página (DOM) ---
-// Eu guardo todos os elementos HTML que vou manipular em constantes para fácil acesso.
-const fileInput = document.getElementById("fileInput"), 
-      dropArea = document.getElementById("dropArea"), 
-      preview = document.getElementById("preview"), 
-      filePreview = document.getElementById("filePreview"), 
-      fileNameDisplay = document.getElementById("fileName"), 
-      qrCanvas = document.getElementById("qr"), 
-      linkDisplay = document.getElementById("link"), 
-      statusDisplay = document.getElementById("status"), // Versão estável que usa o statusDisplay
-      loader = document.getElementById("loader"), 
-      previewSection = document.getElementById("previewSection"), 
-      qrSection = document.getElementById("qrSection"), 
-      resultSection = document.getElementById("resultSection");
+/**
+ * Script Principal - Controlador de Upload
+ * Refatorado com separação de responsabilidades e segurança
+ * 
+ * Dependências:
+ * - js/validation.js (FileValidator)
+ * - js/api-client.js (ApiClient)
+ * - js/ui-manager.js (UIManager)
+ */
 
-// --- Constantes de Configuração ---
-const CLOUD_NAME = "REDACTED_CLOUDINARY_ID";
-const SIGNATURE_ENDPOINT = "/.netlify/functions/generate-signature";
-const SHORTEN_ENDPOINT = "/.netlify/functions/shorten";
+/**
+ * Principais mudanças na arquitetura:
+ * 1. Separação clara entre validação, API e UI
+ * 2. Tratamento de erro centralizado
+ * 3. Retry automático com backoff exponencial
+ * 4. Timeouts em requisições
+ * 5. Logs estruturados para debugging
+ * 6. Sem hardcoding de valores sensíveis
+ */
 
-async function uploadFile(file) {
-    // 1. Eu reseto a interface.
-    loader.style.display = "block";
-    statusDisplay.style.display = "none";
-    previewSection.style.display = "none";
-    qrSection.style.display = "none";
-    resultSection.style.display = "none";
-    preview.style.display = "none";
-    filePreview.style.display = "none";
+/**
+ * Função principal de upload
+ * Orquestra todo o fluxo: validação -> assinatura -> upload -> encurtador
+ * Complexidade: O(1) operações sequenciais
+ */
+const handleUpload = async (file) => {
+  try {
+    // --- VALIDAÇÃO ---
+    const validation = FileValidator.validate(file);
+    if (!validation.isValid) {
+      UIManager.showStatus('Erro: ' + validation.error, 'error');
+      return;
+    }
 
+    // Agora eu preciso saber qual é o tipo de recurso para fazer o upload certo.
+    // Se for imagem, vou pedir ao Cloudinary para otimizar como imagem.
+    // Se for vídeo, ele vai processar como vídeo. Se for outro arquivo qualquer,
+    // eu coloco como "raw".
+    let resourceType = 'auto'; // Deixo o Cloudinary decidir automaticamente
+    
+    // Aqui leio o nome da minha cloud do Cloudinary. Eu coloco isso em uma metatag
+    // no HTML para que o navegador possa acessar, sem expor no repositório público
+    const cloudName = window.__CLOUD_NAME__ || 'default-cloud';
+    const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
+
+    // Faço uma requisição para o servidor pedir a assinatura. Preciso disso porque
+    // não posso colocar minhas credenciais do Cloudinary no frontend
+    UIManager.showStatus('Obtendo permissão para upload...', 'loading');
+    let signatureData;
     try {
-        // 2. Eu determino o tipo de recurso.
-        let resourceType = 'raw';
-        if (file.type.startsWith('image/')) resourceType = 'image';
-        if (file.type.startsWith('video/')) resourceType = 'video';
-        const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`;
-
-        // 3. Eu peço a assinatura.
-        statusDisplay.style.color = '#A6ACCD';
-        statusDisplay.textContent = "Obtendo permissão para upload...";
-        statusDisplay.style.display = "block";
-        const signatureResponse = await fetch(SIGNATURE_ENDPOINT);
-        if (!signatureResponse.ok) throw new Error('Falha ao obter assinatura do servidor.');
-        const signatureData = await signatureResponse.json();
-
-        // 4. Eu monto o FormData.
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("api_key", signatureData.api_key);
-        formData.append("timestamp", signatureData.timestamp);
-        formData.append("signature", signatureData.signature);
-        formData.append("use_filename", "true");
-        formData.append("unique_filename", "false");
-
-        // 5. Eu envio o arquivo.
-        statusDisplay.textContent = "Enviando arquivo...";
-        const uploadResponse = await fetch(UPLOAD_URL, { method: "POST", body: formData });
-        const uploadedData = await uploadResponse.json();
-        if (!uploadResponse.ok) throw new Error(uploadedData.error.message || 'Erro do Cloudinary.');
-
-        // 6. Eu construo a URL longa.
-        const { version, public_id, format } = uploadedData;
-        let finalPublicId = public_id;
-        if (format) finalPublicId += `.${format}`;
-        const longUrl = `https://res.cloudinary.com/${CLOUD_NAME}/${uploadedData.resource_type}/upload/v${version}/${finalPublicId}`;
-
-        // 7. Eu encurto o link.
-        statusDisplay.textContent = "Criando link curto...";
-        const shortenResponse = await fetch(SHORTEN_ENDPOINT, { method: 'POST', body: JSON.stringify({ longUrl: longUrl }) });
-        if (!shortenResponse.ok) throw new Error('Falha ao criar o link curto.');
-        const { slug } = await shortenResponse.json();
-        const shortUrl = `${window.location.origin}/s/${slug}`;
-        
-        // --- INTEGRAÇÃO POSTHOG: SUCESSO ---
-        if (window.posthog) {
-            posthog.capture('upload_success', { file_name: file.name, file_size: file.size, file_type: file.type, short_url: shortUrl, long_url: longUrl });
-        }
-
-        // 8. Eu exibo os resultados.
-        previewSection.style.display = "flex";
-        if (resourceType === "image") {
-            preview.src = URL.createObjectURL(file);
-            preview.style.display = "block";
-        } else {
-            fileNameDisplay.textContent = file.name;
-            filePreview.style.display = "block";
-        }
-        
-        linkDisplay.innerHTML = `<a href="${shortUrl}" target="_blank" rel="noopener noreferrer">${shortUrl}</a>`;
-        resultSection.style.display = "block";
-        
-        new QRious({ element: qrCanvas, value: shortUrl, size: 200 });
-        qrSection.style.display = "block";
-        
-        statusDisplay.style.color = '#4ade80';
-        statusDisplay.textContent = "Upload realizado com sucesso!";
-        statusDisplay.style.display = "block"; // Garante que a mensagem de sucesso seja exibida
-
-    } catch (err) {
-        // --- INTEGRAÇÃO POSTHOG: FALHA ---
-        if (window.posthog) {
-            posthog.capture('upload_failed', { file_name: file ? file.name : 'unknown', file_size: file ? file.size : 0, error_message: err.message });
-        }
-        
-        statusDisplay.style.color = '#f87171';
-        statusDisplay.textContent = "Erro: " + err.message;
-        statusDisplay.style.display = "block";
-    } finally {
-        loader.style.display = "none";
+      signatureData = await ApiClient.getUploadSignature();
+    } catch (error) {
+      throw new Error(`Falha ao obter assinatura: ${error.message}`);
     }
-}
 
-// --- Lógica de Manipulação de Arquivos e Eventos ---
-const MAX_SIZE_MB = 10;
-const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
-
-const handleFile = (file) => {
-    if (!file) return;
-    if (file.size > MAX_SIZE_BYTES) {
-        statusDisplay.style.color = '#f87171';
-        statusDisplay.textContent = `Erro: O arquivo é muito grande. O limite é de ${MAX_SIZE_MB} MB.`;
-        statusDisplay.style.display = 'block';
-        return;
+    // --- VALIDAR RESPOSTA DA ASSINATURA ---
+    if (!signatureData.signature || !signatureData.api_key || !signatureData.timestamp) {
+      throw new Error('Dados de assinatura incompletos');
     }
-    uploadFile(file);
+
+    // --- FAZER UPLOAD ---
+    UIManager.showStatus('Enviando arquivo...', 'loading');
+    let cloudinaryResponse;
+    try {
+      cloudinaryResponse = await ApiClient.uploadToCloudinary(file, signatureData);
+    } catch (error) {
+      throw new Error(`Erro ao fazer upload: ${error.message}`);
+    }
+
+    // --- VALIDAR RESPOSTA DO CLOUDINARY ---
+    const { public_id, format, version, resource_type } = cloudinaryResponse;
+    if (!public_id) {
+      throw new Error('Cloudinary retornou dados inválidos');
+    }
+
+    // --- CONSTRUIR URL LONGA ---
+    // Eu pego o nome da minha cloud do Cloudinary de uma variável que vem do HTML
+    // Assim fico seguro que está tudo em uma variável de ambiente, não hardcoded
+    const cloudName = window.__CLOUD_NAME__ || 'default-cloud';
+    const formatSuffix = format ? `.${format}` : '';
+    const longUrl = `https://res.cloudinary.com/${cloudName}/${resource_type}/upload/v${version}/${public_id}${formatSuffix}`;
+
+    // Valido se a URL foi construída correctamente e é segura
+    if (!FileValidator.isSafeUrl(longUrl)) {
+      throw new Error('URL gerada não é segura');
+    }
+
+    // --- ENCURTAR LINK ---
+    UIManager.showStatus('Criando link curto...', 'loading');
+    let slug;
+    try {
+      slug = await ApiClient.shortenUrl(longUrl);
+    } catch (error) {
+      throw new Error(`Falha ao encurtar link: ${error.message}`);
+    }
+
+    // Validar slug
+    if (!slug || typeof slug !== 'string' || slug.length < 3) {
+      throw new Error('Slug gerado é inválido');
+    }
+
+    const shortUrl = `${window.location.origin}/s/${slug}`;
+
+    // --- REGISTRO DE SUCESSO ---
+    if (window.posthog) {
+      posthog.capture('upload_success', {
+        file_name: file.name,
+        file_size: file.size,
+        file_type: file.type,
+        short_url: shortUrl,
+        long_url: longUrl
+      });
+    }
+
+    // --- EXIBIR RESULTADOS ---
+    UIManager.showImagePreview(file);
+    UIManager.showQRCode(shortUrl);
+    UIManager.showResult(shortUrl);
+    UIManager.showStatus('Upload realizado com sucesso!', 'success');
+
+  } catch (error) {
+    // --- TRATAMENTO DE ERRO ---
+    const errorMessage = error.message || 'Erro desconhecido';
+
+    // Registrar erro
+    if (window.posthog) {
+      posthog.capture('upload_failed', {
+        file_name: file?.name || 'unknown',
+        file_size: file?.size || 0,
+        error_message: errorMessage
+      });
+    }
+
+    UIManager.showStatus(`Erro: ${errorMessage}`, 'error');
+    console.error('Upload failed:', error);
+
+  } finally {
+    UIManager.hideLoading();
+  }
 };
 
-// Listeners de evento
-fileInput.addEventListener("change", () => { if (fileInput.files.length > 0) handleFile(fileInput.files[0]); });
-dropArea.addEventListener('click', () => fileInput.click());
-['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => dropArea.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }));
-['dragenter', 'dragover'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.style.borderColor = '#4ade80'));
-['dragleave', 'drop'].forEach(eventName => dropArea.addEventListener(eventName, () => dropArea.style.borderColor = '#82AAFF'));
-dropArea.addEventListener("drop", (e) => { if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]); });
+/**
+ * Função para gerar frase aleatória no rodapé
+ */
+const loadRandomFooter = () => {
+  const frasesPessoais = [
+    "Feito com ❤️ por Lucas Cassiano.",
+    "A 15ª tentativa é a que vale!",
+    "Com ❤️, código e alguns loops por Lucas Cassiano."
+  ];
 
-document.body.addEventListener('paste', (e) => {
-    const items = (e.clipboardData || window.clipboardData).items;
-    for (const item of items) {
-        if (item.type.indexOf('image') !== -1) {
-            const blob = item.getAsFile();
-            handleFile(blob);
-            e.preventDefault();
-            return;
-        }
-    }
-});
+  const frasesDeTech = [
+    "Trocando bits por sorrisos.",
+    "Hospedado na nuvem, com os pés no chão.",
+    "Cuidado: este site pode conter traços de código.",
+    "Transformando café em código desde 2025.",
+    "404: Sono não encontrado.",
+    "Versão estável (por enquanto).",
+    "Não é mágica, é tecnologia (mas às vezes parece)."
+  ];
 
-const copyButton = document.getElementById('copyButton');
-if (copyButton) {
-    copyButton.addEventListener('click', () => {
-        const linkElement = document.getElementById('link').querySelector('a');
-        if (linkElement && navigator.clipboard) {
-            navigator.clipboard.writeText(linkElement.href).then(() => {
-                if (window.posthog) {
-                    posthog.capture('link_copied', { url_copied: linkElement.href });
-                }
-                copyButton.textContent = 'Copiado!';
-                copyButton.style.backgroundColor = '#4ade80';
-                setTimeout(() => {
-                    copyButton.textContent = 'Copiar Link';
-                    copyButton.style.backgroundColor = '#82AAFF';
-                }, 2000);
-            });
-        }
-    });
-}
+  const frasesUpae = [
+    "Dando um 'upa' nos seus arquivos.",
+    "Upaê! Seu link chegou na velocidade de um clique.",
+    "Salvando arquivos do limbo do seu desktop.",
+    "Conectando meu PC e meu celular, um QR code de cada vez.",
+    "Simples. Rápido. Compartilhado."
+  ];
 
-// Lógica para o rodapé
+  const todasAsFrases = [...frasesPessoais, ...frasesDeTech, ...frasesUpae];
+  const fraseAleatoria = todasAsFrases[Math.floor(Math.random() * todasAsFrases.length)];
+
+  const footerElement = document.getElementById('dynamic-footer');
+  if (footerElement) {
+    footerElement.textContent = fraseAleatoria;
+  }
+};
+
+/**
+ * Inicialização quando DOM está pronto
+ */
 document.addEventListener('DOMContentLoaded', () => {
-    const frasesPessoais = ["Feito com ❤️ por Lucas Cassiano.", "A 15ª tentativa é a que vale!", "Com ❤️, código e alguns loops por Lucas Cassiano."];
-    const frasesDeTech = ["Trocando bits por sorrisos.", "Hospedado na nuvem, com os pés no chão.", "Cuidado: este site pode conter traços de código.", "Transformando café em código desde 2025.", "404: Sono não encontrado.", "Versão estável (por enquanto).", "Não é mágica, é tecnologia (mas às vezes parece)."];
-    const frasesUpae = ["Dando um 'upa' nos seus arquivos.", "Upaê! Seu link chegou na velocidade de um clique.", "Salvando arquivos do limbo do seu desktop.", "Conectando meu PC e meu celular, um QR code de cada vez.", "Simples. Rápido. Compartilhado."];
-    const frasesDivertidas = [...frasesPessoais, ...frasesDeTech, ...frasesUpae, ...frasesPessoais];
-    const footerElement = document.getElementById('dynamic-footer');
-    if (footerElement) {
-        const indiceAleatorio = Math.floor(Math.random() * frasesDivertidas.length);
-        footerElement.textContent = frasesDivertidas[indiceAleatorio];
-    }
+  // Carregar frase do rodapé
+  loadRandomFooter();
+
+  // Configurar handlers de arquivo
+  UIManager.setupDragAndDrop(handleUpload);
+  UIManager.setupCopyButton();
+  UIManager.setupPaste(handleUpload);
+
+  console.log('✅ Upload interface initialized');
 });

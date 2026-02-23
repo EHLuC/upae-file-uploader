@@ -140,3 +140,38 @@ vite.config.ts.timestamp-*
 
 # Ignorar arquivos de estado da CLI do Netlify
 .netlify
+
+# ============================================================
+# 🔐 SEGURANÇA - NUNCA COMMITAR INFORMAÇÕES SENSÍVEIS
+# ============================================================
+
+# Variáveis de Ambiente - Onde ficam as credenciais
+.env
+.env.local
+.env.*.local
+.env.production.local
+.env.development.local
+.env.test.local
+
+# Arquivos com Secrets/Chaves/Credenciais
+*secret*
+*key*
+*token*
+*credential*
+*credentials*
+*password*
+*.pem
+*.key
+private*
+config/secrets*
+
+# Cookies e Sessions
+.session
+*.session
+cookies*
+
+# Arquivo de baseline para detect-secrets
+.secrets.baseline
+
+# macOS
+.DS_Store

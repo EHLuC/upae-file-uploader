@@ -1,19 +1,41 @@
 {
   "name": "decima-quinta-tentativa",
-  "version": "1.0.0",
-  "description": "",
+  "version": "2.0.0",
+  "description": "Upaê File Uploader - Aplicação web segura de upload e compartilhamento de arquivos com encurtador de links",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test.js",
+    "test:watch": "nodemon test.js",
+    "start": "netlify dev",
+    "dev": "netlify dev",
+    "lint": "eslint . --ext .js --ignore-pattern node_modules",
+    "format": "prettier --write \"**/*.js\""
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "upload",
+    "file-sharing",
+    "url-shortener",
+    "cloudinary",
+    "supabase",
+    "netlify",
+    "jamstack"
+  ],
+  "author": "Lucas Cassiano",
+  "license": "MIT",
   "type": "commonjs",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.53.0",
     "cloudinary": "^2.7.0",
     "form-data": "^4.0.3",
     "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0",
+    "nodemon": "^3.0.0"
   }
 }
+
