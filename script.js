@@ -25,6 +25,10 @@
  */
 const handleUpload = async (file) => {
   try {
+    // Espero o config carregar antes de fazer qualquer coisa
+    // Isso garante que eu tenho o cloudName e posthogKey antes de usar
+    await window.configLoaded;
+    
     // --- VALIDAÇÃO ---
     const validation = FileValidator.validate(file);
     if (!validation.isValid) {
@@ -64,7 +68,9 @@ const handleUpload = async (file) => {
     try {
       cloudinaryResponse = await ApiClient.uploadToCloudinary(file, signatureData);
     } catch (error) {
-      throw new Error(error.message || 'Falha no upload');
+      // Serializo o erro corretamente, porque às vezes vem objeto complexo
+      const errorMsg = error.message || error.error || (typeof error === 'string' ? error : JSON.stringify(error));
+      throw new Error(errorMsg || 'Falha no upload');
     }
 
     // --- VALIDAR RESPOSTA DO CLOUDINARY ---
@@ -185,8 +191,12 @@ const loadRandomFooter = () => {
 
 /**
  * Inicialização quando DOM está pronto
+ * Aqui eu espero o DOM carregar e também o config antes de ativar tudo
  */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // Espero o config carregar antes de qualquer coisa
+  await window.configLoaded;
+  
   // Carregar frase do rodapé
   loadRandomFooter();
 
@@ -196,4 +206,5 @@ document.addEventListener('DOMContentLoaded', () => {
   UIManager.setupPaste(handleUpload);
 
   console.log('✅ Upload interface initialized');
+  console.log('✅ Cloud Name:', window.__CLOUD_NAME__);
 });

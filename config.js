@@ -11,24 +11,40 @@
  * 4. Se alguma chave tiver faltando, fico com um valor de desenvolvimento
  */
 
-(async function() {
+/**
+ * Configuração Global
+ * 
+ * Aqui eu busco as variáveis de ambiente do servidor sem deixar elas expostas no código.
+ * Faço um fetch pra API que me devolve as configs necessárias tipo cloudinary e posthog.
+ * Uso async/await pra garantir que carregou antes de usar no resto do site.
+ */
+
+window.configLoaded = (async function() {
   try {
+    // Busco as configs do backend
     const response = await fetch('/.netlify/functions/config');
     const config = await response.json();
     
+    // Populo as variáveis globais que o resto do site usa
     window.__CLOUD_NAME__ = config.cloudName || 'demo-cloud';
     window.__POSTHOG_KEY__ = config.posthogKey || null;
     
+    // Se tiver PostHog, inicializo ele aqui mesmo
     if (window.__POSTHOG_KEY__ && window.posthog) {
       posthog.init(window.__POSTHOG_KEY__, { api_host: 'https://us.i.posthog.com' });
     }
     
+    // Aviso se tá usando config fake de desenvolvimento
     if (window.__CLOUD_NAME__ === 'demo-cloud') {
-      console.warn('Usando config de desenvolvimento');
+      console.warn('⚠️ Usando config de desenvolvimento');
     }
+    
+    return true;
   } catch (error) {
-    console.error('Erro ao carregar config:', error);
+    console.error('❌ Erro ao carregar config:', error);
+    // Fallback pra valores de desenvolvimento se der erro
     window.__CLOUD_NAME__ = 'demo-cloud';
     window.__POSTHOG_KEY__ = null;
+    return false;
   }
 })();
