@@ -64,9 +64,7 @@ const handleUpload = async (file) => {
     try {
       cloudinaryResponse = await ApiClient.uploadToCloudinary(file, signatureData);
     } catch (error) {
-      // Alguns erros vêm como objetos complexos, então extraio a mensagem com cuidado
-      const errorMsg = error.message || error.error || (typeof error === 'string' ? error : 'Falha desconhecida')
-      throw new Error(`Erro ao fazer upload: ${errorMsg}`);
+      throw new Error(error.message || 'Falha no upload');
     }
 
     // --- VALIDAR RESPOSTA DO CLOUDINARY ---

@@ -102,22 +102,20 @@ const isSafeUrl = (url) => {
  */
 const validateJsonResponse = async (response, context) => {
   if (!response.ok) {
-    // Se deu erro, trato o erro de forma amigável
     let errorMsg = `Erro ${response.status}`;
     try {
       const errorData = await response.json();
-      errorMsg = errorData.error || errorData.message || JSON.stringify(errorData) || errorMsg;
+      if (errorData.error) errorMsg = errorData.error;
+      else if (errorData.message) errorMsg = errorData.message;
     } catch {
-      errorMsg = await response.text().catch(() => errorMsg);
+      try {
+        errorMsg = await response.text() || errorMsg;
+      } catch {}
     }
-    throw new Error(`${context}: ${errorMsg}`);
+    throw new Error(errorMsg);
   }
 
-  try {
-    return await response.json();
-  } catch (error) {
-    throw new Error(`Resposta inválida do servidor em ${context}`);
-  }
+  return await response.json();
 };
 
 // Eu exponho essas funções como um objeto global para todo o resto da app usar
