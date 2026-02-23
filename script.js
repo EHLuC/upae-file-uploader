@@ -36,16 +36,22 @@ const handleUpload = async (file) => {
       return;
     }
 
-    // Agora eu preciso saber qual é o tipo de recurso para fazer o upload certo.
-    // Se for imagem, vou pedir ao Cloudinary para otimizar como imagem.
-    // Se for vídeo, ele vai processar como vídeo. Se for outro arquivo qualquer,
-    // eu coloco como "raw".
-    let resourceType = 'auto'; // Deixo o Cloudinary decidir automaticamente
+    // Detectar o tipo de recurso ANTES do upload
+    // Isso é crítico porque PDFs, ZIPs etc precisam ir como "raw" desde o início
+    const imageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/svg+xml'];
+    const videoTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo'];
     
-    // Aqui leio o nome da minha cloud do Cloudinary. Eu coloco isso em uma metatag
-    // no HTML para que o navegador possa acessar, sem expor no repositório público
+    let resourceType = 'raw'; // Default para arquivos genéricos
+    if (imageTypes.includes(file.type)) {
+      resourceType = 'image';
+    } else if (videoTypes.includes(file.type)) {
+      resourceType = 'video';
+    }
+    
+    console.log('📦 Detectado tipo de arquivo:', file.type, '→ resource_type:', resourceType);
+    
+    // Aqui leio o nome da minha cloud do Cloudinary
     const cloudName = window.__CLOUD_NAME__ || 'default-cloud';
-    const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
 
     // Faço uma requisição para o servidor pedir a assinatura. Preciso disso porque
     // não posso colocar minhas credenciais do Cloudinary no frontend
@@ -66,42 +72,26 @@ const handleUpload = async (file) => {
     UIManager.showStatus('Enviando arquivo...', 'loading');
     let cloudinaryResponse;
     try {
-      cloudinaryResponse = await ApiClient.uploadToCloudinary(file, signatureData);
+      cloudinaryResponse = await ApiClient.uploadToCloudinary(file, signatureData, resourceType);
     } catch (error) {
       // Uso a função serializeError pra garantir que sempre tenho string legível
       throw new Error(FileValidator.serializeError(error) || 'Falha no upload');
     }
 
     // --- VALIDAR RESPOSTA DO CLOUDINARY ---
-    const { public_id, format, version, resource_type } = cloudinaryResponse;
+    const { public_id, format, version, resource_type: cloudinaryResourceType } = cloudinaryResponse;
     if (!public_id) {
       throw new Error('Cloudinary retornou dados inválidos');
     }
 
     // Log pra debug - ver o que o Cloudinary retornou
-    console.log('📦 Resposta do Cloudinary:', { public_id, format, version, resource_type });
+    console.log('📦 Resposta do Cloudinary:', { public_id, format, version, resource_type: cloudinaryResourceType });
 
     // --- CONSTRUIR URL LONGA ---
-    // Eu reuso a variável cloudName que já declarei lá em cima
-    // para construir a URL final do arquivo no Cloudinary
-    // 
-    // IMPORTANTE: PDFs e arquivos raw precisam de resource_type correto!
-    // O Cloudinary às vezes retorna "image" pra tudo quando uso /auto/upload
-    // Então eu corrijo manualmente baseado no tipo MIME do arquivo original
-    let finalResourceType = resource_type;
-    
-    // Listas de tipos que sei como classificar
-    const imageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/svg+xml'];
-    const videoTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo'];
-    
-    // Se o arquivo original não é imagem nem vídeo, forço "raw"
-    if (!imageTypes.includes(file.type) && !videoTypes.includes(file.type)) {
-      finalResourceType = 'raw';
-      console.log('🔧 Corrigindo resource_type para "raw" porque tipo MIME é:', file.type);
-    }
-    
+    // Uso o resourceType que detectei no início (não o que o Cloudinary retorna)
+    // porque já fiz o upload com o tipo correto
     const formatSuffix = format ? `.${format}` : '';
-    const longUrl = `https://res.cloudinary.com/${cloudName}/${finalResourceType}/upload/v${version}/${public_id}${formatSuffix}`;
+    const longUrl = `https://res.cloudinary.com/${cloudName}/${resourceType}/upload/v${version}/${public_id}${formatSuffix}`;
     
     console.log('🔗 URL construída:', longUrl);
 

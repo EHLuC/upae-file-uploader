@@ -96,9 +96,10 @@ const shortenUrl = async (longUrl) => {
  * 
  * @param {File} file - O arquivo que o usuário quer fazer upload
  * @param {object} signature - Os dados de assinatura que recebi do servidor
+ * @param {string} resourceType - Tipo do recurso: 'image', 'video' ou 'raw'
  * @returns {Promise<object>} A resposta do Cloudinary com os dados do upload
  */
-const uploadToCloudinary = async (file, signature) => {
+const uploadToCloudinary = async (file, signature, resourceType = 'auto') => {
   // Monto um FormData com tudo que o Cloudinary precisa para validar o upload
   const formData = new FormData();
   formData.append('file', file);
@@ -111,7 +112,9 @@ const uploadToCloudinary = async (file, signature) => {
   // Aqui leio o nome da minha cloud do Cloudinary a partir de uma variável de ambiente
   // que é injetada via metatag HTML (mais seguro que hardcoding)
   const cloudName = window.__CLOUD_NAME__ || 'default-cloud';
-  const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
+  const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
+  
+  console.log('🚀 Fazendo upload para:', uploadUrl);
 
   // Faço a requisição com timeout de 60 segundos porque upload de arquivo grande
   // pode levar um tempo
