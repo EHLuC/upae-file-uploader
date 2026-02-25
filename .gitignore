@@ -173,5 +173,19 @@ cookies*
 # Arquivo de baseline para detect-secrets
 .secrets.baseline
 
+# Documentação Interna de Desenvolvimento
+# (Guias que expõem implementação ou erros corrigidos)
+SECURITY_ACTION_REQUIRED.md
+REFACTORING_REPORT.md
+GUIA_CONFIGURACAO_VARIAVEIS.md
+DEPLOY_CHECKLIST.md
+CONFIGURAR_NETLIFY.md
+SUPABASE_*.md
+
+# Arquivos de Setup do Supabase ou Firebase
+supabase-setup.md
+firebase-setup.md
+database-migrations/
+
 # macOS
 .DS_Store
